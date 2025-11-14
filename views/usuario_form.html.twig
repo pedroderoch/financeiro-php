@@ -30,6 +30,8 @@
     {% else %}
         <form action="/usuarios/criar" method="POST" style="max-width: 500px;">
     {% endif %}
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         {# 
            4. LÓGICA DE REPOPULAÇÃO (value="...")

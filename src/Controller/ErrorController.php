@@ -38,4 +38,16 @@ class ErrorController extends BaseController
         // 2. Renderiza a nossa nova view de erro 405
         $this->render('errors/405.html.twig');
     }
+
+    /**
+     * Este método será chamado para gerar a resposta 419 (Falha de CSRF)
+     */
+    public function csrfError(): void
+    {
+        // 1. Define o código de resposta HTTP para 419
+        http_response_code(419);
+        
+        // 2. Renderiza a nossa nova view de erro 419
+        $this->render('errors/419.html.twig');
+    }
 }

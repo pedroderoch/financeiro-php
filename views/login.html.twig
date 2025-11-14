@@ -14,6 +14,7 @@
         {% endif %}
 
         <form action="/login" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div style="margin-bottom: 15px;">
                 <label for="usuario" style="display: block; margin-bottom: 5px;">Usuário</label>
                 {# O valor padrão tenta pegar o 'old_usuario' da sessão caso ele tenha errado a senha #}

@@ -82,3 +82,32 @@ function session_has($key)
 {
     return isset($_SESSION[$key]);
 }
+
+/**
+ * GERA O TOKEN CSRF
+ * 1. Verifica se já existe um token na sessão.
+ * 2. Se não existir, cria um token aleatório, seguro e longo.
+ * 3. Salva na sessão e o retorna.
+ */
+function generate_csrf_token()
+{
+    if (empty($_SESSION['csrf_token'])) {
+        // bin2hex(random_bytes(32)) cria uma string de 64 caracteres
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * VALIDA O TOKEN CSRF
+ * 1. Pega o token enviado pelo formulário.
+ * 2. Compara ele com o token guardado na sessão.
+ * 3. Usa hash_equals() para uma comparação segura (previne "timing attacks").
+ */
+function validate_csrf_token($token)
+{
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}

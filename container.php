@@ -27,6 +27,7 @@ $containerBuilder->addDefinitions([
         $twig->addExtension(new DebugExtension());
         $twig->addFunction(new TwigFunction('session_has', 'session_has'));
         $twig->addFunction(new TwigFunction('session_get', 'session_get'));
+        $twig->addFunction(new TwigFunction('csrf_token', 'generate_csrf_token'));
         
         return $twig;
     },

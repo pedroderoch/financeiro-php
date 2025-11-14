@@ -68,6 +68,26 @@ switch ($routeInfo[0]) {
         
         [$class, $method] = $handler;
 
+        // ============================================================
+        // 🛡️ VERIFICADOR DE TOKEN CSRF (Middleware Manual)
+        // ============================================================
+
+        // Verificamos se é uma requisição que MUDA dados (POST)
+        if ($httpMethod === 'POST') {
+            // Pegamos o token enviado pelo formulário
+            $token = $_POST['csrf_token'] ?? '';
+            // Usamos nossa função helper para validar
+            if (!validate_csrf_token($token)) {
+                // Se o token for inválido, paramos tudo.
+                // 419 é o código HTTP para "Authentication Timeout"
+                // (usado pelo Laravel para falha de CSRF)
+                $controller = $container->get(ErrorController::class);
+                $controller->csrfError();
+                exit;
+            }
+        }
+        // ============================================================
+
         $controller = $container->get($class);
         
         $controller->$method($vars);

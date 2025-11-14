@@ -47,6 +47,8 @@
                         {# 6. O FORM "Excluir" (com seu estilo de botão) #}
                         {# Agora ele é "irmão" do link, não "filho" #}
                         <form action="/usuarios/excluir/{{ usuario.id }}" method="POST" style="display: inline;">
+
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" onclick="return confirm('Tem certeza que deseja excluir este usuário?');" style="
                                 background-color: #dc3545; 
                                 color: white; 

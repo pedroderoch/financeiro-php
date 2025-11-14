@@ -1,0 +1,13 @@
+{# 1. Diz ao Twig que este template "estende" o layout principal #}
+{% extends "layout.html.twig" %}
+
+{# 2. Define o conteúdo para o bloco "title" (que está no <head> do pai) #}
+{% block title %}Página Inicial - Meu Projeto PHP{% endblock %}
+
+{# 3. Define o conteúdo para o bloco "content" (que está no <body> do pai) #}
+{% block content %}
+    <h1>{{ titulo }}</h1>
+    <p>{{ descricao }}</p>
+    
+    <p>Esta página está usando a herança de templates do Twig!</p>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Entrar no Sistema{% endblock %}
+
+{% block content %}
+    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: white;">
+        <h2 style="text-align: center;">Login</h2>
+
+        {# Mensagem de Erro de Login (Vermelha) #}
+        {% if session_has('error') %}
+            <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                {{ session_get('error') }}
+            </div>
+        {% endif %}
+
+        <form action="/login" method="POST">
+            <div style="margin-bottom: 15px;">
+                <label for="usuario" style="display: block; margin-bottom: 5px;">Usuário</label>
+                {# O valor padrão tenta pegar o 'old_usuario' da sessão caso ele tenha errado a senha #}
+                <input type="text" id="usuario" name="usuario" value="{{ session_get('old_usuario') }}" required style="width: 100%; padding: 10px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="senha" style="display: block; margin-bottom: 5px;">Senha</label>
+                <input type="password" id="senha" name="senha" required style="width: 100%; padding: 10px; box-sizing: border-box;">
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">
+                Entrar
+            </button>
+        </form>
+    </div>
+{% endblock %}

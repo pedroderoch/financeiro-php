@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalhe do Usuário</title>
+    <style>body { font-family: sans-serif; padding: 20px; }</style>
+</head>
+<body>
+    <p><a href="/usuarios">Voltar para a lista</a></p>
+    
+    {% if usuario %}
+        <h1>{{ usuario.nome }}</h1>
+        <p><strong>ID:</strong> {{ usuario.id }}</p>
+        <p><strong>Email:</strong> {{ usuario.email }}</p>
+    {% else %}
+        <h1>Erro</h1>
+        <p>{{ error }}</p>
+    {% endif %}
+</body>
+</html>

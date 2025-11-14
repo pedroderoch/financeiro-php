@@ -1,0 +1,83 @@
+{% extends "layout.html.twig" %}
+
+{# 
+  1. Define o 'modo' (Adicionar ou Editar)
+  Se a variável 'usuario' (vinda do controller) tiver dados e um ID, o modo é 'Editar'.
+  Se não, o modo é 'Adicionar'.
+#}
+{% set modo = usuario and usuario.id ? 'Editar' : 'Adicionar' %}
+
+{% block title %}{{ modo }} Usuário{% endblock %}
+
+{% block content %}
+    <h1>{{ modo }} Usuário</h1>
+
+    {# 2. MOSTRAR ERROS DE VALIDAÇÃO (Vindos da Sessão) #}
+    {% if session_has('errors') %}
+        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
+            <strong>Oops! Encontramos alguns erros:</strong>
+            <ul>
+                {% for erro in session_get('errors') %}
+                    <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {# 3. Define a AÇÃO do formulário (Criar ou Atualizar) #}
+    {% if modo == 'Editar' %}
+        <form action="/usuarios/atualizar/{{ usuario.id }}" method="POST" style="max-width: 500px;">
+    {% else %}
+        <form action="/usuarios/criar" method="POST" style="max-width: 500px;">
+    {% endif %}
+        
+        {# 
+           4. LÓGICA DE REPOPULAÇÃO (value="...")
+           A lógica é: Tente pegar o valor 'old' da sessão. 
+           Se não existir (??), tente pegar o valor do 'usuario' (para edição).
+           Se não existir (??), use uma string vazia.
+        #}
+        
+        <div style="margin-bottom: 15px;">
+            <label for="nome" style="display: block; margin-bottom: 5px;">Nome Completo</label>
+            <input type="text" id="nome" name="nome" value="{{ session_get('old')['nome'] ?? usuario.nome ?? '' }}" required style="width: 100%; padding: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="usuario" style="display: block; margin-bottom: 5px;">Nome de Usuário (login)</label>
+            <input type="text" id="usuario" name="usuario" value="{{ session_get('old')['usuario'] ?? usuario.usuario ?? '' }}" required style="width: 100%; padding: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="email" style="display: block; margin-bottom: 5px;">Email</label>
+            <input type="email" id="email" name="email" value="{{ session_get('old')['email'] ?? usuario.email ?? '' }}" required style="width: 100%; padding: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="senha" style="display: block; margin-bottom: 5px;">Senha</label>
+            <input type="password" id="senha" name="senha" 
+                   {% if modo == 'Adicionar' %}required{% endif %} 
+                   style="width: 100%; padding: 8px;">
+            {# 
+              - Campo senha NUNCA é repopulado por segurança.
+              - Se for modo 'Editar', o campo não é 'required' e mostramos a nota.
+            #}
+            {% if modo == 'Editar' %}
+                <small>Deixe em branco para não alterar a senha.</small>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="nivel" style="display: block; margin-bottom: 5px;">Nível de Acesso</label>
+            <select id="nivel" name="nivel" style="width: 100%; padding: 8px;">
+                {# Lógica para selecionar o valor antigo ou o do usuário #}
+                {% set nivel_selecionado = session_get('old')['nivel'] ?? usuario.nivel ?? 'usuario' %}
+                
+                <option value="usuario" {% if nivel_selecionado == 'usuario' %}selected{% endif %}>Usuário</option>
+                <option value="admin" {% if nivel_selecionado == 'admin' %}selected{% endif %}>Administrador</option>
+            </select>
+        </div>
+        
+        <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer;">Salvar</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>{% block title %}Meu Projeto PHP{% endblock %}</title>
+    
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        nav { background-color: #333; padding: 10px 0; }
+        nav ul { list-style: none; padding: 0; margin: 0; text-align: center; }
+        nav ul li { display: inline-block; margin: 0 15px; }
+        nav ul li a { color: white; text-decoration: none; font-weight: bold; }
+    </style>
+
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+    <nav>
+        <ul>
+            {# Links visíveis para todos #}
+            <li><a href="/">Home</a></li>
+
+            {# Links que SÓ aparecem se estiver logado #}
+            {% if session_has('user_id') or attribute(_context, 'SESSION').user_id is defined %}
+                {# Truque: O PHP Sessão nem sempre está disponível direto no Twig
+                    Se o session_has funcionar, ótimo.
+                    Se não, teríamos que passar a sessão como global.
+                    
+                    Vamos assumir que você criou a função session_has no container.php
+                #}
+                
+                <li><a href="/usuarios">Usuários</a></li>
+                
+                {# Botão de Sair #}
+                <li style="float: right;"><a href="/logout" style="color: #ff9999;">Sair</a></li>
+            {% else %}
+                {# Link de Login se não estiver logado #}
+                <li style="float: right;"><a href="/login">Entrar</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        {# --- MOSTRAR MENSAGEM DE SUCESSO --- #}
+        {% if session_has('success') %}
+            <div style="color: green; background: #e8f5e9; border: 1px solid green; padding: 15px; margin-bottom: 20px;">
+                {{ session_get('success') }}
+            </div>
+        {% endif %}
+        {# --- FIM DO SUCESSO --- #}
+        
+        {% block content %}
+            <p>Bem-vindo ao site!</p>
+        {% endblock %}
+    </div>
+
+    {% block javascripts %}{% endblock %}
+</body>
+</html>

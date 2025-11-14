@@ -1,0 +1,11 @@
+# Dependências do Composer (pesadas e baixáveis via composer.json)
+/vendor/
+
+# Arquivos de Ambiente (CONTÉM SENHAS - MUITO PERIGOSO)
+.env
+
+# Arquivos de sistema/IDE (opcional, mas recomendado)
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

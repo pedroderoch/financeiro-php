@@ -10,6 +10,9 @@
 {% block title %}{{ modo }} Usuário{% endblock %}
 
 {% block content %}
+    {# Buscamos os dados antigos do formulário e guardamos na variável 'old' #}
+    {% set old = session_get('old') %}
+
     <h1>{{ modo }} Usuário</h1>
 
     {# 2. MOSTRAR ERROS DE VALIDAÇÃO (Vindos da Sessão) #}
@@ -42,17 +45,17 @@
         
         <div style="margin-bottom: 15px;">
             <label for="nome" style="display: block; margin-bottom: 5px;">Nome Completo</label>
-            <input type="text" id="nome" name="nome" value="{{ session_get('old')['nome'] ?? usuario.nome ?? '' }}" required style="width: 100%; padding: 8px;">
+            <input type="text" id="nome" name="nome" value="{{ old['nome'] ?? usuario.nome ?? '' }}" required style="width: 100%; padding: 8px;">
         </div>
 
         <div style="margin-bottom: 15px;">
             <label for="usuario" style="display: block; margin-bottom: 5px;">Nome de Usuário (login)</label>
-            <input type="text" id="usuario" name="usuario" value="{{ session_get('old')['usuario'] ?? usuario.usuario ?? '' }}" required style="width: 100%; padding: 8px;">
+            <input type="text" id="usuario" name="usuario" value="{{ old['usuario'] ?? usuario.usuario ?? '' }}" required style="width: 100%; padding: 8px;">
         </div>
         
         <div style="margin-bottom: 15px;">
             <label for="email" style="display: block; margin-bottom: 5px;">Email</label>
-            <input type="email" id="email" name="email" value="{{ session_get('old')['email'] ?? usuario.email ?? '' }}" required style="width: 100%; padding: 8px;">
+            <input type="email" id="email" name="email" value="{{ old['email'] ?? usuario.email ?? '' }}" required style="width: 100%; padding: 8px;">
         </div>
 
         <div style="margin-bottom: 15px;">
@@ -73,7 +76,7 @@
             <label for="nivel" style="display: block; margin-bottom: 5px;">Nível de Acesso</label>
             <select id="nivel" name="nivel" style="width: 100%; padding: 8px;">
                 {# Lógica para selecionar o valor antigo ou o do usuário #}
-                {% set nivel_selecionado = session_get('old')['nivel'] ?? usuario.nivel ?? 'usuario' %}
+                {% set nivel_selecionado = old['nivel'] ?? usuario.nivel ?? 'usuario' %}
                 
                 <option value="usuario" {% if nivel_selecionado == 'usuario' %}selected{% endif %}>Usuário</option>
                 <option value="admin" {% if nivel_selecionado == 'admin' %}selected{% endif %}>Administrador</option>

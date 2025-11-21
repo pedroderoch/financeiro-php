@@ -17,6 +17,19 @@ use Illuminate\Validation\DatabasePresenceVerifier;
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// ==============================================================
+// TRATAMENTO DE ERROS (WHOOPS)
+// ==============================================================
+// Só ativamos se estivermos em modo de DEBUG (definido no .env)
+// Se a chave não existir, assumimos 'false' por segurança.
+if ($_ENV['APP_DEBUG'] === 'true') {
+    $whoops = new \Whoops\Run;
+    $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
+    $whoops->register();
+}
+// ==============================================================
+
+
 // 3. Cria uma nova instância do Capsule
 $capsule = new Capsule;
 

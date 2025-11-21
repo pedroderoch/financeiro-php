@@ -5,6 +5,8 @@ namespace App\Controller;
 // 1. Importamos o nosso NOVO Model Eloquent
 use App\Model\Usuario;
 use Twig\Environment; 
+use App\Request\UsuarioStoreRequest;
+use App\Request\UsuarioUpdateRequest;
 
 class UsuarioController extends BaseController
 {
@@ -28,69 +30,26 @@ class UsuarioController extends BaseController
         ]);
     }
 
-    /**
-     * Este método RECEBE os dados do formulário (via POST)
-     * e os salva no banco de dados.
-     * (Responde à rota POST /usuarios/criar)
-     */
     public function store(): void
     {
-        $dadosDoFormulario = $_POST;
+        // 1. Instancia a classe de validação
+        $request = new UsuarioStoreRequest();
 
-        // 1. As Regras (como antes)
-        $regras = [
-            'nome' => 'required|min:3',
-            'usuario' => 'required|unique:usuarios,usuario',
-            'email' => 'required|email|unique:usuarios,email',
-            'senha' => 'required|min:6',
-            'nivel' => 'required'
-        ];
+        // 2. Manda validar! 
+        // Se der erro, ele redireciona SOZINHO lá dentro.
+        // Se passar, ele devolve os dados limpos aqui.
+        $dadosValidados = $request->validate($_POST, '/usuarios/cadastrar');
 
-        // 2. !!!!! AQUI ESTÁ A SOLUÇÃO !!!!!
-        // Criamos nossas próprias mensagens em português.
-        // A sintaxe é 'nome_do_campo.nome_da_regra'
-        $mensagens = [
-            // Regras 'required'
-            'nome.required' => 'O campo Nome é obrigatório.',
-            'usuario.required' => 'O campo Usuário (login) é obrigatório.',
-            'email.required' => 'O campo E-mail é obrigatório.',
-            'senha.required' => 'O campo Senha é obrigatório.',
-            'nivel.required' => 'O campo Nível é obrigatório.',
-            
-            // Regras 'min'
-            'nome.min' => 'O nome deve ter pelo menos 3 caracteres.',
-            'senha.min' => 'A senha deve ter pelo menos 6 caracteres.',
-            
-            // Regras 'unique'
-            'usuario.unique' => 'Este nome de usuário (login) já está em uso.',
-            'email.unique' => 'Este endereço de e-mail já está em uso.',
-            
-            // Regras de formato
-            'email.email' => 'Por favor, insira um formato de e-mail válido.'
-        ];
-
-        // 3. Crie o validador, passando as $regras E as $mensagens
-        $validador = validator($dadosDoFormulario, $regras, $mensagens);
-
-        // 4. Verifique se a validação falhou (o resto é igual)
-        if ($validador->fails()) {
-            session_flash('errors', $validador->errors()->all());
-            unset($dadosDoFormulario['senha']);
-            session_flash('old', $dadosDoFormulario);
-            header('Location: /usuarios/cadastrar');
-            exit;
-        }
-
-        // 5. Se a validação passou, continue...
+        // 3. Se chegou aqui, é SUCESSO. Só salvar.
         try {
-            Usuario::create($dadosDoFormulario);
+            Usuario::create($dadosValidados);
             session_flash('success', 'Usuário cadastrado com sucesso!');
             header('Location: /usuarios');
             exit;
         } catch (\Exception $e) {
-            error_log('Erro ao salvar usuário: ' . $e->getMessage());
-            session_flash('errors', ['Ocorreu um erro inesperado ao salvar.']);
-            session_flash('old', $dadosDoFormulario);
+            // Erro de banco de dados (não de validação)
+            error_log('Erro BD: ' . $e->getMessage());
+            session_flash('errors', ['Erro interno ao salvar.']);
             header('Location: /usuarios/cadastrar');
             exit;
         }
@@ -122,16 +81,12 @@ class UsuarioController extends BaseController
         ]);
     }
 
-/**
-     * Este método RECEBE os dados do formulário de EDIÇÃO (via POST)
-     * e ATUALIZA o usuário no banco.
-     */
     public function update(array $params): void
     {
-        $id = $params['id'];
-        $dadosDoFormulario = $_POST;
+        // 1. Pegamos o ID da rota primeiro
+        $id = (int) $params['id'];
 
-        // 1. Encontra o usuário PRIMEIRO (precisamos saber se ele existe)
+        // 2. Encontramos o usuário no banco (Fundamental para o Eloquent saber QUEM atualizar)
         $usuario = Usuario::find($id);
 
         if (!$usuario) {
@@ -139,62 +94,38 @@ class UsuarioController extends BaseController
             exit;
         }
 
-        // 2. REGRAS DE VALIDAÇÃO ADAPTADAS
-        $regras = [
-            'nome' => 'required|min:3',
-            'usuario' => 'required|unique:usuarios,usuario,' . $id, // <-- IGNORA O ID ATUAL
-            'email' => 'required|email|unique:usuarios,email,' . $id, // <-- IGNORA O ID ATUAL
-            'nivel' => 'required',
-            // A senha não é 'required' aqui. Só validamos SE ela for enviada.
-            'senha' => 'nullable|min:6' 
-        ];
+        // 3. CORREÇÃO 1: Instanciamos a Request PASSANDO O ID
+        // Isso permite que a regra 'unique' ignore este usuário específico
+        $request = new UsuarioUpdateRequest($id);
 
-        $mensagens = [
-            'nome.required' => 'O campo Nome é obrigatório.',
-            'usuario.required' => 'O campo Usuário é obrigatório.',
-            'usuario.unique' => 'Este usuário já está em uso por outra pessoa.',
-            'email.required' => 'O campo E-mail é obrigatório.',
-            'email.email' => 'Email inválido.',
-            'email.unique' => 'Este e-mail já está em uso por outra pessoa.',
-            'senha.min' => 'A senha deve ter pelo menos 6 caracteres.'
-        ];
+        // 4. CORREÇÃO 2: A URL de erro precisa ter o ID
+        // Se falhar, volta para: /usuarios/editar/1
+        $dadosValidados = $request->validate($_POST, '/usuarios/editar/' . $id);
 
-        // 3. Valida
-        $validador = validator($dadosDoFormulario, $regras, $mensagens);
-
-        if ($validador->fails()) {
-            session_flash('errors', $validador->errors()->all());
-            
-            // Limpa a senha dos dados antigos por segurança
-            unset($dadosDoFormulario['senha']);
-            
-            // Retorna os dados para preencher o formulário
-            session_flash('old', $dadosDoFormulario);
-            
-            header('Location: /usuarios/editar/' . $id);
-            exit;
+        // 5. Lógica da Senha (Opcional no Update)
+        // Se a senha veio vazia, removemos do array para não sobrescrever com vazio
+        if (empty($dadosValidados['senha'])) {
+            unset($dadosValidados['senha']);
         }
 
-        // 4. LÓGICA DA SENHA (Igual a antes)
-        // Se a senha estiver vazia, removemos do array para não apagar a senha antiga
-        if (empty($dadosDoFormulario['senha'])) {
-            unset($dadosDoFormulario['senha']);
-        }
-
-        // 5. Atualiza
         try {
-            $usuario->update($dadosDoFormulario);
+            // 6. CORREÇÃO 3: Atualizamos a INSTÂNCIA ($usuario), não a classe estática
+            $usuario->update($dadosValidados);
+            
             session_flash('success', 'Usuário atualizado com sucesso!');
             header('Location: /usuarios');
             exit;
+
         } catch (\Exception $e) {
-            error_log('Erro ao atualizar: ' . $e->getMessage());
-            session_flash('errors', ['Erro inesperado ao atualizar.']);
+            error_log('Erro BD: ' . $e->getMessage());
+            session_flash('errors', ['Erro interno ao atualizar dados.']);
+            
+            // Volta para o formulário com o ID correto
             header('Location: /usuarios/editar/' . $id);
             exit;
         }
     }
-
+    
     public function destroy(array $params): void
     {
         // 1. Pega o ID da URL (exatamente como no update)
@@ -218,6 +149,8 @@ class UsuarioController extends BaseController
      */
     public function list(): void
     {
+
+        echoooo "erro";
         // 2. Veja como a sintaxe mudou!
         // Adeus Repositório, adeus EntityManager...
         // ::all() é o Eloquent a dizer "SELECT * FROM usuarios"

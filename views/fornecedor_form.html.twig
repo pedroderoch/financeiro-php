@@ -1,0 +1,51 @@
+{% extends "layout.html.twig" %}
+
+{% set modo = fornecedor and fornecedor.id ? 'Editar' : 'Adicionar' %}
+
+{% block title %}{{ modo }} Fornecedor{% endblock %}
+
+{% block content %}
+    {# Buscamos os dados antigos do formulário e guardamos na variável 'old' #}
+    {% set old = session_get('old') %}
+
+    <h1>{{ modo }} Fornecedor</h1>
+
+    {# 2. MOSTRAR ERROS DE VALIDAÇÃO (Vindos da Sessão) #}
+    {% if session_has('errors') %}
+        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
+            <strong>Oops! Encontramos alguns erros:</strong>
+            <ul>
+                {% for erro in session_get('errors') %}
+                    <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {# 3. Define a AÇÃO do formulário (Criar ou Atualizar) #}
+    {% if modo == 'Editar' %}
+        <form action="/fornecedores/atualizar/{{ fornecedor.id }}" method="POST" style="max-width: 500px;">
+    {% else %}
+        <form action="/fornecedores/criar" method="POST" style="max-width: 500px;">
+    {% endif %}
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+               
+        <div style="margin-bottom: 15px;">
+            <label for="nome" style="display: block; margin-bottom: 5px;">Nome Fornecedor</label>
+            <input type="text" id="nome" name="nome" value="{{ old['nome'] ?? fornecedor.nome ?? '' }}" required style="width: 100%; padding: 8px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="descricao" style="display: block; margin-bottom: 5px;">Descrição</label>
+            <input type="text" id="descricao" name="descricao" value="{{ old['descricao'] ?? fornecedor.descricao ?? '' }}" style="width: 100%; padding: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="chave_pix" style="display: block; margin-bottom: 5px;">Chave Pix</label>
+            <input type="text" id="chave_pix" name="chave_pix" value="{{ old['chave_pix'] ?? fornecedor.chave_pix ?? '' }}" style="width: 100%; padding: 8px;">
+        </div>
+        
+        <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer;">Salvar</button>
+    </form>
+{% endblock %}

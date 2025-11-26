@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-// 1. Importamos o nosso NOVO Model Eloquent
 use App\Model\Usuario;
 use Twig\Environment; 
 use App\Request\UsuarioStoreRequest;
@@ -55,11 +54,6 @@ class UsuarioController extends BaseController
         }
     }
 
-    /**
-     * (CONVENÇÃO DE MERCADO)
-     * Este método MOSTRA o formulário de edição PREENCHIDO.
-     * (Responde à rota GET /usuarios/editar/{id})
-     */
     public function edit(array $params): void
     {
         // 1. Pega o ID da URL
@@ -83,10 +77,10 @@ class UsuarioController extends BaseController
 
     public function update(array $params): void
     {
-        // 1. Pegamos o ID da rota primeiro
+        //Pegamos o ID da rota primeiro
         $id = (int) $params['id'];
 
-        // 2. Encontramos o usuário no banco (Fundamental para o Eloquent saber QUEM atualizar)
+        //Encontramos o usuário no banco (Fundamental para o Eloquent saber QUEM atualizar)
         $usuario = Usuario::find($id);
 
         if (!$usuario) {
@@ -94,22 +88,22 @@ class UsuarioController extends BaseController
             exit;
         }
 
-        // 3. CORREÇÃO 1: Instanciamos a Request PASSANDO O ID
-        // Isso permite que a regra 'unique' ignore este usuário específico
+        //Instanciamos a Request PASSANDO O ID
+        //Isso permite que a regra 'unique' ignore este usuário específico
         $request = new UsuarioUpdateRequest($id);
 
-        // 4. CORREÇÃO 2: A URL de erro precisa ter o ID
-        // Se falhar, volta para: /usuarios/editar/1
+        //A URL de erro precisa ter o ID
+        //Se falhar, volta para: /usuarios/editar/1
         $dadosValidados = $request->validate($_POST, '/usuarios/editar/' . $id);
 
-        // 5. Lógica da Senha (Opcional no Update)
-        // Se a senha veio vazia, removemos do array para não sobrescrever com vazio
+        //Lógica da Senha
+        //Se a senha veio vazia, removemos do array para não sobrescrever com vazio
         if (empty($dadosValidados['senha'])) {
             unset($dadosValidados['senha']);
         }
 
         try {
-            // 6. CORREÇÃO 3: Atualizamos a INSTÂNCIA ($usuario), não a classe estática
+            //Atualizamos a INSTÂNCIA ($usuario), não a classe estática
             $usuario->update($dadosValidados);
             
             session_flash('success', 'Usuário atualizado com sucesso!');
@@ -128,18 +122,18 @@ class UsuarioController extends BaseController
     
     public function destroy(array $params): void
     {
-        // 1. Pega o ID da URL (exatamente como no update)
+        //Pega o ID da URL
         $id = $params['id'];
 
-        // 2. Encontra o usuário
+        //Encontra o usuário
         $usuario = Usuario::find($id);
 
-        // 3. Se o usuário existir, o Eloquent o apaga
+        //Se o usuário existir, o Eloquent o apaga
         if ($usuario) {
             $usuario->delete();
         }
 
-        // 4. Redireciona de volta para a lista em qualquer caso
+        //Redireciona de volta para a lista em qualquer caso
         header('Location: /usuarios');
         exit;
     }
@@ -149,11 +143,6 @@ class UsuarioController extends BaseController
      */
     public function list(): void
     {
-
-        echoooo "erro";
-        // 2. Veja como a sintaxe mudou!
-        // Adeus Repositório, adeus EntityManager...
-        // ::all() é o Eloquent a dizer "SELECT * FROM usuarios"
         $usuariosReais = Usuario::all();
 
         // dd($usuariosReais->toArray());
@@ -162,18 +151,17 @@ class UsuarioController extends BaseController
             'usuarios' => $usuariosReais
         ];
         
-        // 3. Renderiza a view (o .twig não muda nada!)
+        //Renderiza a view (o .twig não muda nada!)
         $this->render('usuarios_lista.html.twig', $dados);
     }
 
     /**
-     * Gerencia a rota '/usuario/{id}' (Ver um)
+     * Gerencia a rota '/usuario/{id}'
      */
     public function show(array $params): void
     {
         $userId = $params['id'] ?? 0;
         
-        // ::find() é o Eloquent a dizer "SELECT * FROM usuarios WHERE id = ?"
         $usuario = Usuario::find($userId);
 
         if (!$usuario) {
@@ -185,74 +173,4 @@ class UsuarioController extends BaseController
         $this->render('usuario_show.html.twig', ['usuario' => $usuario]);
     }
     
-    /**
-     * Rota de teste para ADICIONAR um usuário (Create)
-     */
-    public function testeAddUsuario(): void
-    {
-        Usuario::query()->delete();
-        // Usamos o método ::create() (Mass Assignment)
-        // Isto só funciona porque definimos $fillable no Model
-        $novoUsuario = Usuario::create([
-            'nome' => 'Pedro Henrique',
-            'usuario' => 'pedro_rocha',
-            'email' => 'pedro.deroch@gmail.com',
-            'senha' => '123456', 
-            'nivel' => 'administrador'
-        ]);
-
-        echo "Usuário comum '{$novoUsuario->nome}' (nível: {$novoUsuario->nivel}) criado!<br>";
-        echo '<br><a href="/usuarios">Ver a lista</a>';
-    }
-    
-    /**
-     * Rota de teste para ATUALIZAR um usuário (Update)
-     */
-    public function testeUpdateUsuario(array $params): void
-    {
-        $userId = $params['id'];
-        
-        // 1. Encontramos o usuário
-        $usuario = Usuario::find($userId);
-
-        if (!$usuario) {
-            echo "Usuário com ID {$userId} não encontrado!";
-            return;
-        }
-
-        // 2. Alteramos as propriedades do objeto (como no Doctrine)
-        $usuario->nome = 'Kaio Jorge Matador Atualizado';
-        
-        // 3. O próprio objeto sabe como se salvar!
-        // (Isto faz o "UPDATE ... WHERE id = ?")
-        $usuario->save();
-
-        echo "Usuário '{$usuario->nome}' atualizado com sucesso!";
-        echo '<br><a href="/usuarios">Ver a lista</a>';
-    }
-    
-    /**
-     * Rota de teste para APAGAR um usuário (Delete)
-     */
-    public function testeRemoveUsuario(array $params): void
-    {
-        $userId = $params['id'];
-        
-        // 1. Encontramos o usuário
-        $usuario = Usuario::find($userId);
-
-        if (!$usuario) {
-            echo "Usuário com ID {$userId} não encontrado!";
-            return;
-        }
-
-        $nomeAntigo = $usuario->nome;
-        
-        // 2. O próprio objeto sabe como se apagar!
-        // (Isto faz o "DELETE FROM ... WHERE id = ?")
-        $usuario->delete();
-
-        echo "Usuário '{$nomeAntigo}' foi removido com sucesso!";
-        echo '<br><a href="/usuarios">Ver a lista</a>';
-    }
 }

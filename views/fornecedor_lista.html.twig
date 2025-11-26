@@ -1,0 +1,66 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Lista de Fornecedores{% endblock %}
+
+{% block content %}
+    <h1>Lista de Fornecedores</h1>
+
+    {% if fornecedores is empty %}
+        <p>Nenhum fornecedor encontrado.</p>
+    {% else %}
+        <ul style="list-style: none; padding: 0;">
+            
+            {% for fornecedor in fornecedores %}
+            
+                <li style="border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+
+                    {# 3. Todas as informações do fornecedor ficam aqui dentro #}
+                    <p><strong>ID Fornecedor:</strong> {{ fornecedor.id }}</p>
+                    <p><strong>Nome:</strong> {{ fornecedor.nome }}</p>
+                    <p><strong>Descrição:</strong> {{ fornecedor.descricao }}</p>
+                    <p><strong>Chave Pix:</strong> {{ fornecedor.chave_pix }}</p>
+                    <p><strong>Data Cadastro:</strong> {{ fornecedor.created_at }}</p>
+                    <p><strong>Data Atualização:</strong> {{ fornecedor.updated_at }}</p>
+                    
+                    {# 4. Uma divisão para os botões #}
+                    <hr style="margin-top: 15px;">
+                    <div style="margin-top: 10px;">
+
+                        {# 5. O LINK "Editar" (com seu estilo de botão) #}
+                        <a href="/fornecedores/editar/{{ fornecedor.id }}" style="
+                            text-decoration: none; 
+                            background-color: #007bff; 
+                            color: white; 
+                            padding: 5px 10px; 
+                            border-radius: 4px;
+                            font-size: 0.9em;
+                            margin-right: 10px; {# <-- margem na direita #}
+                        ">
+                            Editar
+                        </a>
+
+                        {# 6. O FORM "Excluir" (com seu estilo de botão) #}
+                        {# Agora ele é "irmão" do link, não "filho" #}
+                        <form action="/fornecedores/excluir/{{ fornecedor.id }}" method="POST" style="display: inline;">
+
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" onclick="return confirm('Tem certeza que deseja excluir este fornecedor?');" style="
+                                background-color: #dc3545; 
+                                color: white; 
+                                padding: 5px 10px; 
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                                border: none;
+                                cursor: pointer;
+                            ">
+                                Excluir
+                            </button>
+                        </form>
+                    </div>
+
+                </li> {# 7. Fim do "card" do fornecedor #}
+                
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalhes do Fornecedor</title>
+    <style>body { font-family: sans-serif; padding: 20px; }</style>
+</head>
+<body>
+    <p><a href="/fornecedor">Voltar para a lista</a></p>
+    
+    {% if fornecedor %}
+        <h1>{{ fornecedor.nome }}</h1>
+        <p><strong>ID:</strong> {{ fornecedor.id }}</p>
+        <p><strong>Nome:</strong> {{ fornecedor.nome }}</p>
+        <p><strong>Descrição:</strong> {{ fornecedor.descricao }}</p>
+        <p><strong>Chave Pix:</strong> {{ fornecedor.chave_pix }}</p>
+    {% else %}
+        <h1>Erro</h1>
+        <p>{{ error }}</p>
+    {% endif %}
+</body>
+</html>

@@ -11,6 +11,7 @@
 // Importa as classes que vamos usar para definir as rotas
 use App\Controller\HomeController;
 use App\Controller\UsuarioController;
+use App\Controller\FornecedorController;
 use App\Controller\ErrorController;
 use App\Controller\LoginController; 
 
@@ -28,6 +29,15 @@ return FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/usuarios/editar/{id:\d+}', [UsuarioController::class, 'edit']);
     $r->addRoute('POST', '/usuarios/atualizar/{id:\d+}', [UsuarioController::class, 'update']);
     $r->addRoute('POST', '/usuarios/excluir/{id:\d+}', [UsuarioController::class, 'destroy']);
+
+    //Fornecedores
+    $r->addRoute('GET', '/fornecedores', [FornecedorController::class, 'index']);
+    $r->addRoute('GET', '/fornecedor/{id:\d+}', [FornecedorController::class, 'show']);
+    $r->addRoute('GET', '/fornecedores/cadastrar', [FornecedorController::class, 'create']);
+    $r->addRoute('POST', '/fornecedores/criar', [FornecedorController::class, 'store']);
+    $r->addRoute('GET', '/fornecedores/editar/{id:\d+}', [FornecedorController::class, 'edit']);
+    $r->addRoute('POST', '/fornecedores/atualizar/{id:\d+}', [FornecedorController::class, 'update']);
+    $r->addRoute('POST', '/fornecedores/excluir/{id:\d+}', [FornecedorController::class, 'destroy']);
 
     // --- ROTAS DE AUTENTICAÇÃO ---
     $r->addRoute('GET', '/login', [LoginController::class, 'index']);

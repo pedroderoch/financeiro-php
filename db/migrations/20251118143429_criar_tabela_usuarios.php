@@ -8,7 +8,7 @@ final class CriarTabelaUsuarios extends AbstractMigration
     public function change(): void
     {
         // Cria a tabela 'usuarios'
-        $table = $this->table('usuarios_teste');
+        $table = $this->table('usuarios');
         
         $table->addColumn('nome', 'string', ['limit' => 255])
               

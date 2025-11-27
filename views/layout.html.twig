@@ -35,6 +35,7 @@
                 
                 <li><a href="/usuarios">Usuários</a></li>
                 <li><a href="/fornecedores">Fornecedores</a></li>
+                <li><a href="/lancamentos">Lançamentos</a></li>
 
                 
                 {# Botão de Sair #}
@@ -51,7 +52,7 @@
         {# --- MOSTRAR MENSAGEM DE SUCESSO --- #}
         {% if session_has('success') %}
             <div style="color: green; background: #e8f5e9; border: 1px solid green; padding: 15px; margin-bottom: 20px;">
-                {{ session_get('success') }}
+                {{ session_get('success') | raw }}
             </div>
         {% endif %}
         {# --- FIM DO SUCESSO --- #}

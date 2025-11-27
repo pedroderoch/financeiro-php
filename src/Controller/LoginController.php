@@ -25,6 +25,26 @@ class LoginController extends BaseController
             exit;
         }
 
+        // --- AUTO-SETUP (CRIA ADMIN SE NÃO EXISTIR) ---
+        // Verifica se existe pelo menos UM usuário com nível 'admin' ou 'administrador'
+        // (Adaptamos para aceitar os dois casos, caso tenha mudado a nomenclatura)
+        $existeAdmin = Usuario::whereIn('nivel', ['admin', 'administrador'])->exists();
+
+        if (!$existeAdmin) {
+            // Se não existir, cria o "Super Admin" padrão
+            Usuario::create([
+                'nome'    => 'Administrador',
+                'usuario' => 'admin',
+                'email'   => 'admin@sistema.com',
+                'senha'   => 'admin', // O Mutator no Model vai criptografar (hash) automaticamente
+                'nivel'   => 'admin'  // Certifique-se que no seu select do form o value é 'admin'
+            ]);
+
+            // Mostra uma mensagem Flash avisando
+            session_flash('success', '⚠️ <strong>Modo de Segurança Ativado</strong><br>Nenhum administrador foi encontrado, então criamos um para você.<br><br>Use:<br><strong>Usuário:</strong> admin<br><strong>Senha:</strong> admin');
+        }
+        // ----------------------------------------------
+
         $this->render('login.html.twig');
     }
 

@@ -3,7 +3,17 @@
 {% block title %}Lista de Fornecedores{% endblock %}
 
 {% block content %}
-    <h1>Lista de Fornecedores</h1>
+    {# <h1>Lista de Fornecedores</h1>
+    <a href="/lancamentos/cadastrar" style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+        + Novo Fornecedor
+    </a> #}
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Lista de Fornecedores</h1>
+        <a href="/fornecedores/cadastrar" style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+            + Novo Fornecedor
+        </a>
+    </div>
 
     {% if fornecedores is empty %}
         <p>Nenhum fornecedor encontrado.</p>

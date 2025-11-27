@@ -13,7 +13,9 @@ use App\Controller\HomeController;
 use App\Controller\UsuarioController;
 use App\Controller\FornecedorController;
 use App\Controller\ErrorController;
-use App\Controller\LoginController; 
+use App\Controller\LoginController;
+use App\Controller\LancamentoController; 
+
 
 // A função simpleDispatcher é do FastRoute
 return FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
@@ -38,6 +40,15 @@ return FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/fornecedores/editar/{id:\d+}', [FornecedorController::class, 'edit']);
     $r->addRoute('POST', '/fornecedores/atualizar/{id:\d+}', [FornecedorController::class, 'update']);
     $r->addRoute('POST', '/fornecedores/excluir/{id:\d+}', [FornecedorController::class, 'destroy']);
+
+    //Lancamentos
+    $r->addRoute('GET', '/lancamentos', [LancamentoController::class, 'index']);
+    $r->addRoute('GET', '/lancamento/{id:\d+}', [LancamentoController::class, 'show']);
+    $r->addRoute('GET', '/lancamentos/cadastrar', [LancamentoController::class, 'create']);
+    $r->addRoute('POST', '/lancamentos/criar', [LancamentoController::class, 'store']);
+    $r->addRoute('GET', '/lancamentos/editar/{id:\d+}', [LancamentoController::class, 'edit']);
+    $r->addRoute('POST', '/lancamentos/atualizar/{id:\d+}', [LancamentoController::class, 'update']);
+    $r->addRoute('POST', '/lancamentos/excluir/{id:\d+}', [LancamentoController::class, 'destroy']);
 
     // --- ROTAS DE AUTENTICAÇÃO ---
     $r->addRoute('GET', '/login', [LoginController::class, 'index']);

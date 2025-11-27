@@ -3,7 +3,13 @@
 {% block title %}Lista de Usuários{% endblock %}
 
 {% block content %}
-    <h1>Lista de Usuários</h1>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Lista de Usuários</h1>
+        <a href="/usuarios/cadastrar" style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+            + Novo Usuário
+        </a>
+    </div>
 
     {% if usuarios is empty %}
         <p>Nenhum usuário encontrado.</p>

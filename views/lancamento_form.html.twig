@@ -1,0 +1,119 @@
+{% extends "layout.html.twig" %}
+
+{% set modo = lancamento and lancamento.id ? 'Editar' : 'Adicionar' %}
+
+{% block title %}{{ modo }} Lançamento{% endblock %}
+
+{% block content %}
+    {# Recupera dados antigos em caso de erro de validação #}
+    {% set old = session_get('old') %}
+
+    <h1>{{ modo }} Lançamento</h1>
+
+    {# Exibição de Erros #}
+    {% if session_has('errors') %}
+        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
+            <strong>Corrija os erros abaixo:</strong>
+            <ul>
+                {% for erro in session_get('errors') %}
+                    <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {# Define a ação do formulário #}
+    {% if modo == 'Editar' %}
+        <form action="/lancamentos/atualizar/{{ lancamento.id }}" method="POST" style="max-width: 600px;">
+    {% else %}
+        <form action="/lancamentos/criar" method="POST" style="max-width: 600px;">
+    {% endif %}
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {# Linha 1: Descrição e Valor #}
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 2;">
+                <label for="descricao" style="display: block; margin-bottom: 5px;">Descrição</label>
+                <input type="text" id="descricao" name="descricao" value="{{ old['descricao'] ?? lancamento.descricao ?? '' }}" required style="width: 100%; padding: 8px;">
+            </div>
+            <div style="flex: 1;">
+                <label for="valor" style="display: block; margin-bottom: 5px;">Valor (R$)</label>
+                <input type="number" id="valor" name="valor" step="0.01" value="{{ old['valor'] ?? lancamento.valor ?? '' }}" required style="width: 100%; padding: 8px;">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label for="data_vencimento" style="display: block; margin-bottom: 5px;">Vencimento</label>
+                {# Usamos |default para evitar erro se lancamento for nulo #}
+                <input type="date" id="data_vencimento" name="data_vencimento" 
+                       value="{{ old['data_vencimento']|default(lancamento.data_vencimento|default ? lancamento.data_vencimento|date('Y-m-d') : '') }}" 
+                       required style="width: 100%; padding: 8px;">
+            </div>
+            <div style="flex: 1;">
+                <label for="data_pagamento" style="display: block; margin-bottom: 5px;">Data Pagamento</label>
+                {# Correção da linha 52: lógica mais robusta #}
+                <input type="date" id="data_pagamento" name="data_pagamento" 
+                       value="{{ old['data_pagamento']|default(lancamento.data_pagamento|default ? lancamento.data_pagamento|date('Y-m-d') : '') }}" 
+                       style="width: 100%; padding: 8px;">
+            </div>
+        </div>
+
+        {# Linha 3: Fornecedor e Tipo #}
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 2;">
+                <label for="fornecedor_id" style="display: block; margin-bottom: 5px;">Favorecido / Fornecedor</label>
+                <select id="fornecedor_id" name="fornecedor_id" required style="width: 100%; padding: 9px;">
+                    <option value="">Selecione...</option>
+                    {# O Controller precisará enviar a variável 'fornecedores' #}
+                    {% for f in fornecedores %}
+                        {% set selected = (old['fornecedor_id'] ?? lancamento.fornecedor_id) == f.id ? 'selected' : '' %}
+                        <option value="{{ f.id }}" {{ selected }}>{{ f.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label for="tipo" style="display: block; margin-bottom: 5px;">Tipo</label>
+                <select id="tipo" name="tipo" style="width: 100%; padding: 9px;">
+                    {% set tipo_sel = old['tipo'] ?? lancamento.tipo ?? 'despesa' %}
+                    <option value="despesa" {{ tipo_sel == 'despesa' ? 'selected' : '' }}>Despesa (Saída)</option>
+                    <option value="receita" {{ tipo_sel == 'receita' ? 'selected' : '' }}>Receita (Entrada)</option>
+                </select>
+            </div>
+        </div>
+
+        {# Linha 4: Status e Parcelas #}
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <label for="status" style="display: block; margin-bottom: 5px;">Situação</label>
+                <select id="status" name="status" style="width: 100%; padding: 9px;">
+                    {% set status_sel = old['status'] ?? lancamento.status ?? 'pendente' %}
+                    <option value="pendente" {{ status_sel == 'pendente' ? 'selected' : '' }}>Pendente</option>
+                    <option value="pago" {{ status_sel == 'pago' ? 'selected' : '' }}>Pago / Recebido</option>
+                </select>
+            </div>
+            <div style="flex: 1; display: flex; gap: 5px;">
+                <div>
+                    <label for="parcela_atual" style="display: block; margin-bottom: 5px;">Parc. Atual</label>
+                    <input type="number" id="parcela_atual" name="parcela_atual" value="{{ old['parcela_atual'] ?? lancamento.parcela_atual ?? '1' }}" style="width: 100%; padding: 8px;">
+                </div>
+                <div style="display: flex; align-items: flex-end; padding-bottom: 10px;">/</div>
+                <div>
+                    <label for="total_parcelas" style="display: block; margin-bottom: 5px;">Total</label>
+                    <input type="number" id="total_parcelas" name="total_parcelas" value="{{ old['total_parcelas'] ?? lancamento.total_parcelas ?? '1' }}" style="width: 100%; padding: 8px;">
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="observacoes" style="display: block; margin-bottom: 5px;">Observações</label>
+            <textarea id="observacoes" name="observacoes" rows="3" style="width: 100%; padding: 8px;">{{ old['observacoes'] ?? lancamento.observacoes ?? '' }}</textarea>
+        </div>
+
+        <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">
+            Salvar Lançamento
+        </button>
+        <a href="/lancamentos" style="margin-left: 10px; color: #666; text-decoration: none;">Cancelar</a>
+    </form>
+{% endblock %}

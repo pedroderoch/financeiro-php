@@ -1,0 +1,82 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Lançamentos Financeiros{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Lançamentos</h1>
+        <a href="/lancamentos/cadastrar" style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+            + Novo Lançamento
+        </a>
+    </div>
+
+    {# Mensagens Flash (Sucesso) #}
+    {% if session_has('success') %}
+        <div style="color: green; background: #e8f5e9; border: 1px solid green; padding: 15px; margin-bottom: 20px;">
+            {{ session_get('success') }}
+        </div>
+    {% endif %}
+
+    {# Mensagens Flash (Erro) #}
+    {% if session_has('errors') %}
+        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
+            <ul>
+                {% for erro in session_get('errors') %}
+                    <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if lancamentos is empty %}
+        <p>Nenhum lançamento encontrado.</p>
+    {% else %}
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="background-color: #f2f2f2; text-align: left;">
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Vencimento</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Descrição</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Fornecedor</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Valor</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Status</th>
+                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lancamento in lancamentos %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px;">{{ lancamento.data_vencimento | date('d/m/Y') }}</td>
+                        <td style="padding: 10px;">
+                            {{ lancamento.descricao }}
+                            {% if lancamento.total_parcelas %}
+                                <small style="color: #666;">({{ lancamento.parcela_atual }}/{{ lancamento.total_parcelas }})</small>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px;">
+                            {# A mágica do Eloquent: lancamento.fornecedor.nome #}
+                            {{ lancamento.fornecedor.nome ?? 'Sem Fornecedor' }}
+                        </td>
+                        <td style="padding: 10px; font-weight: bold; color: {{ lancamento.tipo == 'receita' ? 'green' : 'red' }};">
+                            R$ {{ lancamento.valor | number_format(2, ',', '.') }}
+                        </td>
+                        <td style="padding: 10px;">
+                            {% if lancamento.status == 'pago' %}
+                                <span style="background-color: #d4edda; color: #155724; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">Pago</span>
+                            {% else %}
+                                <span style="background-color: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px;">
+                            <a href="/lancamentos/editar/{{ lancamento.id }}" style="text-decoration: none; color: #007bff; margin-right: 10px;">Editar</a>
+                            
+                            <form action="/lancamentos/excluir/{{ lancamento.id }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" onclick="return confirm('Tem certeza?');" style="background: none; border: none; color: #dc3545; cursor: pointer; text-decoration: underline;">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

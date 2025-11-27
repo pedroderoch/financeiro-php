@@ -3,32 +3,53 @@
 {% block title %}Entrar no Sistema{% endblock %}
 
 {% block content %}
-    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: white;">
-        <h2 style="text-align: center;">Login</h2>
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-dark text-white text-center py-3">
+                    <h4 class="mb-0"><i class="fa-solid fa-lock me-2"></i>Acesso Restrito</h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    {# Mensagem de Erro (Alert Bootstrap) #}
+                    {% if session_has('error') %}
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <i class="fa-solid fa-circle-exclamation me-2"></i>
+                            <div>{{ session_get('error') }}</div>
+                        </div>
+                    {% endif %}
 
-        {# Mensagem de Erro de Login (Vermelha) #}
-        {% if session_has('error') %}
-            <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
-                {{ session_get('error') }}
+                    <form action="/login" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-3">
+                            <label for="usuario" class="form-label">Usuário</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" class="form-control" id="usuario" name="usuario" 
+                                       value="{{ session_get('old_usuario') }}" required autofocus placeholder="Seu login">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="senha" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                                <input type="password" class="form-control" id="senha" name="senha" required placeholder="Sua senha">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Entrar <i class="fa-solid fa-arrow-right-to-bracket ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3 text-muted small">
+                    Sistema Financeiro &copy; {{ "now"|date("Y") }}
+                </div>
             </div>
-        {% endif %}
-
-        <form action="/login" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div style="margin-bottom: 15px;">
-                <label for="usuario" style="display: block; margin-bottom: 5px;">Usuário</label>
-                {# O valor padrão tenta pegar o 'old_usuario' da sessão caso ele tenha errado a senha #}
-                <input type="text" id="usuario" name="usuario" value="{{ session_get('old_usuario') }}" required style="width: 100%; padding: 10px; box-sizing: border-box;">
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="senha" style="display: block; margin-bottom: 5px;">Senha</label>
-                <input type="password" id="senha" name="senha" required style="width: 100%; padding: 10px; box-sizing: border-box;">
-            </div>
-
-            <button type="submit" style="width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em;">
-                Entrar
-            </button>
-        </form>
+        </div>
     </div>
 {% endblock %}

@@ -4,64 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>{% block title %}Meu Projeto PHP{% endblock %}</title>
+    <title>{% block title %}Meu Financeiro{% endblock %}</title>
     
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (Ícones) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .container { max-width: 900px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        nav { background-color: #333; padding: 10px 0; }
-        nav ul { list-style: none; padding: 0; margin: 0; text-align: center; }
-        nav ul li { display: inline-block; margin: 0 15px; }
-        nav ul li a { color: white; text-decoration: none; font-weight: bold; }
+        /* Ajustes finos que o Bootstrap não cobre */
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: bold; }
     </style>
 
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
 
-    <nav>
-        <ul>
-            {# Links visíveis para todos #}
-            <li><a href="/">Home</a></li>
+    <!-- Menu Responsivo Bootstrap -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fa-solid fa-wallet me-2"></i>Financeiro</a>
+            
+            <!-- Botão Hamburguer para Mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-            {# Links que SÓ aparecem se estiver logado #}
-            {% if session_has('user_id') or attribute(_context, 'SESSION').user_id is defined %}
-                {# Truque: O PHP Sessão nem sempre está disponível direto no Twig
-                    Se o session_has funcionar, ótimo.
-                    Se não, teríamos que passar a sessão como global.
-                    
-                    Vamos assumir que você criou a função session_has no container.php
-                #}
-                
-                <li><a href="/usuarios">Usuários</a></li>
-                <li><a href="/fornecedores">Fornecedores</a></li>
-                <li><a href="/lancamentos">Lançamentos</a></li>
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {# Exibe links apenas se logado #}
+                    {% if session_has('user_id') %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/lancamentos">Lançamentos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/fornecedores">Fornecedores</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/usuarios">Usuários</a>
+                        </li>
+                    {% endif %}
+                </ul>
 
-                
-                {# Botão de Sair #}
-                <li style="float: right;"><a href="/logout" style="color: #ff9999;">Sair</a></li>
-            {% else %}
-                {# Link de Login se não estiver logado #}
-                <li style="float: right;"><a href="/login">Entrar</a></li>
-            {% endif %}
-        </ul>
+                <!-- Lado Direito (Login/Logout) -->
+                <ul class="navbar-nav ms-auto">
+                    {% if session_has('user_id') %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-user-circle me-1"></i> Minha Conta
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="/logout"><i class="fa-solid fa-sign-out-alt me-2"></i>Sair</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light btn-sm" href="/login">Entrar</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </nav>
 
     <div class="container">
-
-        {# --- MOSTRAR MENSAGEM DE SUCESSO --- #}
+        <!-- Mensagem de Sucesso (Alert Bootstrap) -->
         {% if session_has('success') %}
-            <div style="color: green; background: #e8f5e9; border: 1px solid green; padding: 15px; margin-bottom: 20px;">
-                {{ session_get('success') | raw }}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-check-circle me-2"></i> {{ session_get('success') | raw }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         {% endif %}
-        {# --- FIM DO SUCESSO --- #}
-        
-        {% block content %}
-            <p>Bem-vindo ao site!</p>
-        {% endblock %}
+
+        <!-- Mensagem de Erro (Alert Bootstrap) -->
+        {% if session_has('errors') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong><i class="fa-solid fa-exclamation-triangle me-2"></i> Atenção:</strong>
+                <ul class="mb-0 mt-2">
+                    {% for erro in session_get('errors') %}
+                        <li>{{ erro }}</li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endif %}
+
+        <!-- Conteúdo da Página -->
+        {% block content %}{% endblock %}
     </div>
 
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
     {% block javascripts %}{% endblock %}
 </body>
 </html>

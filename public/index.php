@@ -36,8 +36,7 @@ $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
 // 1. Definimos quais rotas são PÚBLICAS (não precisam de login)
 // Se a URL for uma dessas, deixamos passar.
 $rotasPublicas = [
-    '/login',
-    '/'       // (Opcional: Se a Home for pública)
+    '/login'
 ];
 
 // 2. Verificamos:

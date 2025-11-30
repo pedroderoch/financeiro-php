@@ -1,119 +1,182 @@
 {% extends "layout.html.twig" %}
 
-{% set modo = lancamento and lancamento.id ? 'Editar' : 'Adicionar' %}
+{% set modo = lancamento is defined and lancamento and lancamento.id ? 'Editar' : 'Adicionar' %}
 
 {% block title %}{{ modo }} Lançamento{% endblock %}
 
 {% block content %}
-    {# Recupera dados antigos em caso de erro de validação #}
-    {% set old = session_get('old') %}
-
-    <h1>{{ modo }} Lançamento</h1>
-
-    {# Exibição de Erros #}
-    {% if session_has('errors') %}
-        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
-            <strong>Corrija os erros abaixo:</strong>
-            <ul>
-                {% for erro in session_get('errors') %}
-                    <li>{{ erro }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-
-    {# Define a ação do formulário #}
-    {% if modo == 'Editar' %}
-        <form action="/lancamentos/atualizar/{{ lancamento.id }}" method="POST" style="max-width: 600px;">
-    {% else %}
-        <form action="/lancamentos/criar" method="POST" style="max-width: 600px;">
-    {% endif %}
-
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        {# Linha 1: Descrição e Valor #}
-        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <div style="flex: 2;">
-                <label for="descricao" style="display: block; margin-bottom: 5px;">Descrição</label>
-                <input type="text" id="descricao" name="descricao" value="{{ old['descricao'] ?? lancamento.descricao ?? '' }}" required style="width: 100%; padding: 8px;">
-            </div>
-            <div style="flex: 1;">
-                <label for="valor" style="display: block; margin-bottom: 5px;">Valor (R$)</label>
-                <input type="number" id="valor" name="valor" step="0.01" value="{{ old['valor'] ?? lancamento.valor ?? '' }}" required style="width: 100%; padding: 8px;">
-            </div>
-        </div>
-
-        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <div style="flex: 1;">
-                <label for="data_vencimento" style="display: block; margin-bottom: 5px;">Vencimento</label>
-                {# Usamos |default para evitar erro se lancamento for nulo #}
-                <input type="date" id="data_vencimento" name="data_vencimento" 
-                       value="{{ old['data_vencimento']|default(lancamento.data_vencimento|default ? lancamento.data_vencimento|date('Y-m-d') : '') }}" 
-                       required style="width: 100%; padding: 8px;">
-            </div>
-            <div style="flex: 1;">
-                <label for="data_pagamento" style="display: block; margin-bottom: 5px;">Data Pagamento</label>
-                {# Correção da linha 52: lógica mais robusta #}
-                <input type="date" id="data_pagamento" name="data_pagamento" 
-                       value="{{ old['data_pagamento']|default(lancamento.data_pagamento|default ? lancamento.data_pagamento|date('Y-m-d') : '') }}" 
-                       style="width: 100%; padding: 8px;">
-            </div>
-        </div>
-
-        {# Linha 3: Fornecedor e Tipo #}
-        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <div style="flex: 2;">
-                <label for="fornecedor_id" style="display: block; margin-bottom: 5px;">Favorecido / Fornecedor</label>
-                <select id="fornecedor_id" name="fornecedor_id" required style="width: 100%; padding: 9px;">
-                    <option value="">Selecione...</option>
-                    {# O Controller precisará enviar a variável 'fornecedores' #}
-                    {% for f in fornecedores %}
-                        {% set selected = (old['fornecedor_id'] ?? lancamento.fornecedor_id) == f.id ? 'selected' : '' %}
-                        <option value="{{ f.id }}" {{ selected }}>{{ f.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div style="flex: 1;">
-                <label for="tipo" style="display: block; margin-bottom: 5px;">Tipo</label>
-                <select id="tipo" name="tipo" style="width: 100%; padding: 9px;">
-                    {% set tipo_sel = old['tipo'] ?? lancamento.tipo ?? 'despesa' %}
-                    <option value="despesa" {{ tipo_sel == 'despesa' ? 'selected' : '' }}>Despesa (Saída)</option>
-                    <option value="receita" {{ tipo_sel == 'receita' ? 'selected' : '' }}>Receita (Entrada)</option>
-                </select>
-            </div>
-        </div>
-
-        {# Linha 4: Status e Parcelas #}
-        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-            <div style="flex: 1;">
-                <label for="status" style="display: block; margin-bottom: 5px;">Situação</label>
-                <select id="status" name="status" style="width: 100%; padding: 9px;">
-                    {% set status_sel = old['status'] ?? lancamento.status ?? 'pendente' %}
-                    <option value="pendente" {{ status_sel == 'pendente' ? 'selected' : '' }}>Pendente</option>
-                    <option value="pago" {{ status_sel == 'pago' ? 'selected' : '' }}>Pago / Recebido</option>
-                </select>
-            </div>
-            <div style="flex: 1; display: flex; gap: 5px;">
-                <div>
-                    <label for="parcela_atual" style="display: block; margin-bottom: 5px;">Parc. Atual</label>
-                    <input type="number" id="parcela_atual" name="parcela_atual" value="{{ old['parcela_atual'] ?? lancamento.parcela_atual ?? '1' }}" style="width: 100%; padding: 8px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 text-primary"><i class="fa-solid fa-money-bill-transfer me-2"></i>{{ modo }} Lançamento</h4>
                 </div>
-                <div style="display: flex; align-items: flex-end; padding-bottom: 10px;">/</div>
-                <div>
-                    <label for="total_parcelas" style="display: block; margin-bottom: 5px;">Total</label>
-                    <input type="number" id="total_parcelas" name="total_parcelas" value="{{ old['total_parcelas'] ?? lancamento.total_parcelas ?? '1' }}" style="width: 100%; padding: 8px;">
+                <div class="card-body p-4">
+
+                    {# Recupera dados antigos #}
+                    {% set old = session_get('old') %}
+
+                    {# Exibição de Erros #}
+                    {% if session_has('errors') %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="fa-solid fa-triangle-exclamation me-2"></i> Corrija os erros abaixo:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for erro in session_get('errors') %}
+                                    <li>{{ erro }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    {# Define a ação do formulário #}
+                    {% if modo == 'Editar' %}
+                        <form action="/lancamentos/atualizar/{{ lancamento.id }}" method="POST">
+                    {% else %}
+                        <form action="/lancamentos/criar" method="POST">
+                    {% endif %}
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- Linha 1: Descrição e Valor -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                <input type="text" class="form-control" id="descricao" name="descricao" 
+                                       value="{{ old['descricao']|default(lancamento.descricao|default('')) }}" required placeholder="Ex: Conta de Luz">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="valor" class="form-label">Valor (R$)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="valor" name="valor" step="0.01" 
+                                           value="{{ old['valor']|default(lancamento.valor|default('')) }}" required placeholder="0,00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Linha 1: Descrição e Valor -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="valor_pago" class="form-label">Valor Pago</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="valor_pago" name="valor_pago" step="0.01" 
+                                        value="{{ old['valor_pago']|default(lancamento.valor_pago|default('')) }}" placeholder="0,00">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
+                                <select class="form-select" id="forma_pagamento" name="forma_pagamento">
+                                    <option value="">Selecione...</option>
+                                    {% set forma = old['forma_pagamento']|default(lancamento.forma_pagamento|default('')) %}
+                                    <option value="boleto" {{ forma == 'boleto' ? 'selected' : '' }}>Boleto</option>
+                                    <option value="pix" {{ forma == 'pix' ? 'selected' : '' }}>Pix</option>
+                                    <option value="transferencia" {{ forma == 'transferencia' ? 'selected' : '' }}>Transferência</option>
+                                    <option value="cartao_credito" {{ forma == 'cartao_credito' ? 'selected' : '' }}>Cartão de Crédito</option>
+                                    <option value="dinheiro" {{ forma == 'dinheiro' ? 'selected' : '' }}>Dinheiro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Linha 2: Datas -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="data_vencimento" class="form-label">Data de Vencimento</label>
+                                <input type="date" class="form-control" id="data_vencimento" name="data_vencimento" 
+                                       value="{{ old['data_vencimento']|default(lancamento.data_vencimento|default ? lancamento.data_vencimento|date('Y-m-d') : '') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="data_pagamento" class="form-label">Data do Pagamento</label>
+
+                                {# --- DEBUG --- #}
+                                {# <div style="color: red; font-weight: bold; font-size: 12px;">
+                                    VALOR CRU: "{{ lancamento.data_pagamento }}"
+                                </div> #}
+                                {# ------------- #}
+                                
+                                {% set val_pag = '' %}
+                                {# 1. Se tem dado antigo (erro de validação), usa ele #}
+                                {% if old['data_pagamento'] is defined %}
+                                    {% set val_pag = old['data_pagamento'] %}
+                                
+                                {# 2. Se tem lançamento no banco E a data não é nula, formata #}
+                                {# O Twig entende "lancamento.data_pagamento" como false se for null #}
+                                {% elseif lancamento is defined and lancamento and lancamento.data_pagamento %}
+                                    {% set val_pag = lancamento.data_pagamento|date('Y-m-d') %}
+                                {% endif %}
+                                
+                                <input type="date" class="form-control" id="data_pagamento" name="data_pagamento" value="{{ val_pag }}">
+                            </div>
+                            
+                        </div>
+
+                        <!-- Linha 3: Fornecedor e Tipo -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label for="fornecedor_id" class="form-label mb-0">Favorecido / Fornecedor</label>
+                                    <a href="/fornecedores/cadastrar" class="text-decoration-none small text-primary" title="Cadastrar novo fornecedor" target="_blank">
+                                        <i class="fa-solid fa-user-plus"></i> <span class="d-none d-sm-inline">Novo</span>
+                                    </a>
+                                </div>
+                                <select class="form-select mt-2" id="fornecedor_id" name="fornecedor_id" required>
+                                    <option value="">Selecione...</option>
+                                    {% if fornecedores is defined %}
+                                        {% for f in fornecedores %}
+                                            {% set selected = (old['fornecedor_id']|default(lancamento.fornecedor_id|default(''))) == f.id ? 'selected' : '' %}
+                                            <option value="{{ f.id }}" {{ selected }}>{{ f.nome }}</option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tipo" class="form-label">Tipo</label>
+                                <select class="form-select" id="tipo" name="tipo">
+                                    {% set tipo_sel = old['tipo']|default(lancamento.tipo|default('despesa')) %}
+                                    <option value="despesa" {{ tipo_sel == 'despesa' ? 'selected' : '' }}>Despesa (Saída)</option>
+                                    <option value="receita" {{ tipo_sel == 'receita' ? 'selected' : '' }}>Receita (Entrada)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Linha 4: Status e Parcelas -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">Situação</label>
+                                <select class="form-select" id="status" name="status">
+                                    {% set status_sel = old['status']|default(lancamento.status|default('pendente')) %}
+                                    <option value="pendente" {{ status_sel == 'pendente' ? 'selected' : '' }}>Pendente</option>
+                                    <option value="pago" {{ status_sel == 'pago' ? 'selected' : '' }}>Pago / Recebido</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Parcelamento</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Parcela</span>
+                                    <input type="number" class="form-control" id="parcela_atual" name="parcela_atual" 
+                                           value="{{ old['parcela_atual']|default(lancamento.parcela_atual|default('1')) }}">
+                                    <span class="input-group-text">de</span>
+                                    <input type="number" class="form-control" id="total_parcelas" name="total_parcelas" 
+                                           value="{{ old['total_parcelas']|default(lancamento.total_parcelas|default('1')) }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ old['observacoes']|default(lancamento.observacoes|default('')) }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="/lancamentos" class="text-decoration-none text-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Cancelar</a>
+                            <button type="submit" class="btn btn-success btn-sm px-4">
+                                <i class="fa-solid fa-save me-2"></i> Salvar Lançamento
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="observacoes" style="display: block; margin-bottom: 5px;">Observações</label>
-            <textarea id="observacoes" name="observacoes" rows="3" style="width: 100%; padding: 8px;">{{ old['observacoes'] ?? lancamento.observacoes ?? '' }}</textarea>
-        </div>
-
-        <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em;">
-            Salvar Lançamento
-        </button>
-        <a href="/lancamentos" style="margin-left: 10px; color: #666; text-decoration: none;">Cancelar</a>
-    </form>
+    </div>
 {% endblock %}

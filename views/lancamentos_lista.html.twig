@@ -2,81 +2,163 @@
 
 {% block title %}Lançamentos Financeiros{% endblock %}
 
+{% block stylesheets %}
+<style>
+    /* Ajustes finos para o DataTables */
+    .dataTables_wrapper .page-link {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    .dataTables_wrapper .dataTables_info {
+        padding-top: 0.8rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Lançamentos</h1>
-        <a href="/lancamentos/cadastrar" style="background-color: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
-            + Novo Lançamento
+        <a href="/lancamentos/cadastrar" class="btn btn-success btn-sm">
+            Cadastrar Lançamento
         </a>
     </div>
 
-    {# Mensagens Flash (Sucesso) #}
+    {# Mensagens Flash #}
     {% if session_has('success') %}
-        <div style="color: green; background: #e8f5e9; border: 1px solid green; padding: 15px; margin-bottom: 20px;">
-            {{ session_get('success') }}
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fa-solid fa-check-circle me-2"></i> {{ session_get('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     {% endif %}
 
-    {# Mensagens Flash (Erro) #}
     {% if session_has('errors') %}
-        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
-            <ul>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <ul class="mb-0 ps-3">
                 {% for erro in session_get('errors') %}
                     <li>{{ erro }}</li>
                 {% endfor %}
             </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     {% endif %}
 
-    {% if lancamentos is empty %}
-        <p>Nenhum lançamento encontrado.</p>
-    {% else %}
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-                <tr style="background-color: #f2f2f2; text-align: left;">
-                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Vencimento</th>
-                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Descrição</th>
-                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Fornecedor</th>
-                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Valor</th>
-                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Status</th>
-                    <th style="padding: 10px; border-bottom: 1px solid #ddd;">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lancamento in lancamentos %}
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 10px;">{{ lancamento.data_vencimento | date('d/m/Y') }}</td>
-                        <td style="padding: 10px;">
-                            {{ lancamento.descricao }}
-                            {% if lancamento.total_parcelas %}
-                                <small style="color: #666;">({{ lancamento.parcela_atual }}/{{ lancamento.total_parcelas }})</small>
-                            {% endif %}
-                        </td>
-                        <td style="padding: 10px;">
-                            {# A mágica do Eloquent: lancamento.fornecedor.nome #}
-                            {{ lancamento.fornecedor.nome ?? 'Sem Fornecedor' }}
-                        </td>
-                        <td style="padding: 10px; font-weight: bold; color: {{ lancamento.tipo == 'receita' ? 'green' : 'red' }};">
-                            R$ {{ lancamento.valor | number_format(2, ',', '.') }}
-                        </td>
-                        <td style="padding: 10px;">
-                            {% if lancamento.status == 'pago' %}
-                                <span style="background-color: #d4edda; color: #155724; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">Pago</span>
-                            {% else %}
-                                <span style="background-color: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">Pendente</span>
-                            {% endif %}
-                        </td>
-                        <td style="padding: 10px;">
-                            <a href="/lancamentos/editar/{{ lancamento.id }}" style="text-decoration: none; color: #007bff; margin-right: 10px;">Editar</a>
-                            
-                            <form action="/lancamentos/excluir/{{ lancamento.id }}" method="POST" style="display: inline;">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" onclick="return confirm('Tem certeza?');" style="background: none; border: none; color: #dc3545; cursor: pointer; text-decoration: underline;">Excluir</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+            {% if lancamentos is empty %}
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-money-bill-transfer fa-3x mb-3 opacity-25"></i>
+                    <p>Nenhum lançamento encontrado.</p>
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table id="tabelaLancamentos" class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Fornecedor</th>
+                                <th class="text-end">Valor</th>
+                                <th class="text-center">Vencimento</th>
+                                <th class="text-end">Valor Pago</th>
+                                <th class="text-center">Data Pagto</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Forma</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lancamento in lancamentos %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-medium">{{ lancamento.descricao }}</span>
+                                        {% if lancamento.total_parcelas %}
+                                            <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.7em;">
+                                                {{ lancamento.parcela_atual }}/{{ lancamento.total_parcelas }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-regular fa-building me-2 text-muted"></i>
+                                            {{ lancamento.fornecedor.nome ?? '<span class="text-muted small">N/A</span>'|raw }}
+                                        </div>
+                                    </td>
+                                    <td class="text-end fw-bold {{ lancamento.tipo == 'receita' ? 'text-success' : 'text-danger' }}">
+                                        R$ {{ lancamento.valor | number_format(2, ',', '.') }}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ lancamento.data_vencimento | date('d/m/Y') }}
+                                    </td>
+                                    <td class="text-end text-muted">
+                                        {% if lancamento.valor_pago %}
+                                            R$ {{ lancamento.valor_pago | number_format(2, ',', '.') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center text-muted">
+                                        {% if lancamento.data_pagamento %}
+                                            {{ lancamento.data_pagamento | date('d/m/Y') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if lancamento.status == 'pago' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                                <i class="fa-solid fa-check me-1"></i>Pago
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">
+                                                <i class="fa-regular fa-clock me-1"></i>Pendente
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center small text-muted">
+                                        {{ lancamento.forma_pagamento ?? '-' }}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="/lancamentos/editar/{{ lancamento.id }}" class="btn btn-outline-primary btn-sm" title="Editar">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                            </a>
+                                            
+                                            <form action="/lancamentos/excluir/{{ lancamento.id }}" method="POST">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" onclick="return confirm('Tem certeza que deseja excluir?');" class="btn btn-outline-danger btn-sm" title="Excluir">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    $(document).ready(function() {
+        $('#tabelaLancamentos').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/pt-BR.json'
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+            buttons: [
+                { extend: 'excelHtml5', text: '<i class="fa-solid fa-file-excel me-1"></i>', className: 'btn btn-success btn-sm' },
+                { extend: 'pdfHtml5', text: '<i class="fa-solid fa-file-pdf me-1"></i>', className: 'btn btn-danger btn-sm' },
+                { extend: 'print', text: '<i class="fa-solid fa-print me-1"></i>', className: 'btn btn-secondary btn-sm' }
+            ],
+            order: [[ 3, "desc" ]], // Ordenar por Vencimento (coluna index 3)
+            pageLength: 10,
+            responsive: true
+        });
+    });
+</script>
 {% endblock %}

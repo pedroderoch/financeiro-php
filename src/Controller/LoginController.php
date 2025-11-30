@@ -21,7 +21,7 @@ class LoginController extends BaseController
         // Se o usuário já estiver logado, não faz sentido ver a tela de login.
         // Redireciona ele direto para a home ou lista de usuários.
         if (session_has('user_id')) {
-            header('Location: /usuarios');
+            header('Location: /');
             exit;
         }
 
@@ -75,7 +75,7 @@ class LoginController extends BaseController
             $_SESSION['user_nome'] = $usuario->nome; // Opcional: guardar o nome para exibir na tela
 
             session_flash('success', 'Bem-vindo de volta, ' . $usuario->nome . '!');
-            header('Location: /usuarios');
+            header('Location: /');
             exit;
         }
 

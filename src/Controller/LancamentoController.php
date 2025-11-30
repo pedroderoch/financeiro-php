@@ -44,6 +44,14 @@ class LancamentoController extends BaseController
 
         $dadosValidados = $request->validate($_POST, '/lancamentos/cadastrar');
 
+        // Forçar NULL se estiver vazio ---
+        if (empty($dadosValidados['data_pagamento'])) {
+            $dadosValidados['data_pagamento'] = null;
+        }
+        if (empty($dadosValidados['valor_pago'])) {
+            $dadosValidados['valor_pago'] = null;
+        }
+
         try {
             // Adiciona o ID do utilizador logado aos dados validados
             $dadosValidados['usuario_id'] = $_SESSION['user_id'] ?? null;
@@ -96,6 +104,16 @@ class LancamentoController extends BaseController
 
         $request = new LancamentoUpdateRequest();
         $dadosValidados = $request->validate($_POST, '/lancamentos/editar/' . $id);
+        
+        // Forçar NULL se estiver vazio ---
+        if (empty($dadosValidados['data_pagamento'])) {
+            $dadosValidados['data_pagamento'] = null;
+        }
+        if (empty($dadosValidados['valor_pago'])) {
+            $dadosValidados['valor_pago'] = null;
+        }
+
+        // dd($dadosValidados);
 
         try {
             $lancamento->update($dadosValidados);

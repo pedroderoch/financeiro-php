@@ -1,88 +1,107 @@
 {% extends "layout.html.twig" %}
 
-{# 
-  1. Define o 'modo' (Adicionar ou Editar)
-  Se a variável 'usuario' (vinda do controller) tiver dados e um ID, o modo é 'Editar'.
-  Se não, o modo é 'Adicionar'.
-#}
 {% set modo = usuario and usuario.id ? 'Editar' : 'Adicionar' %}
 
-{% block title %}{{ modo }} Usuário{% endblock %}
+{% block title %}{{ modo }} Utilizador{% endblock %}
 
 {% block content %}
-    {# Buscamos os dados antigos do formulário e guardamos na variável 'old' #}
-    {% set old = session_get('old') %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 text-primary">
+                        <i class="fa-solid fa-user-gear me-2"></i>{{ modo }} Utilizador
+                    </h4>
+                </div>
+                <div class="card-body p-4">
 
-    <h1>{{ modo }} Usuário</h1>
+                    {# Recupera dados antigos em caso de erro #}
+                    {% set old = session_get('old') %}
 
-    {# 2. MOSTRAR ERROS DE VALIDAÇÃO (Vindos da Sessão) #}
-    {% if session_has('errors') %}
-        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
-            <strong>Oops! Encontramos alguns erros:</strong>
-            <ul>
-                {% for erro in session_get('errors') %}
-                    <li>{{ erro }}</li>
-                {% endfor %}
-            </ul>
+                    {# Exibição de Erros #}
+                    {% if session_has('errors') %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="fa-solid fa-triangle-exclamation me-2"></i> Corrija os erros abaixo:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for erro in session_get('errors') %}
+                                    <li>{{ erro }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    {# Define a ação do formulário #}
+                    {% if modo == 'Editar' %}
+                        <form action="/usuarios/atualizar/{{ usuario.id }}" method="POST">
+                    {% else %}
+                        <form action="/usuarios/criar" method="POST">
+                    {% endif %}
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- Linha 1: Nome Completo -->
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome Completo</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="{{ old['nome'] ?? usuario.nome ?? '' }}" required placeholder="Ex: João da Silva">
+                            </div>
+                        </div>
+
+                        <!-- Linha 2: Usuário e Nível -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="usuario" class="form-label">Nome de Utilizador (Login)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-at"></i></span>
+                                    <input type="text" class="form-control" id="usuario" name="usuario" 
+                                           value="{{ old['usuario'] ?? usuario.usuario ?? '' }}" required placeholder="Ex: joaosilva">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="nivel" class="form-label">Nível de Acesso</label>
+                                <select class="form-select" id="nivel" name="nivel">
+                                    {% set nivel_sel = old['nivel'] ?? usuario.nivel ?? 'usuario' %}
+                                    <option value="usuario" {{ nivel_sel == 'usuario' ? 'selected' : '' }}>Utilizador Comum</option>
+                                    <option value="admin" {{ nivel_sel == 'admin' ? 'selected' : '' }}>Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Linha 3: Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-mail</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ old['email'] ?? usuario.email ?? '' }}" required placeholder="joao@exemplo.com">
+                            </div>
+                        </div>
+
+                        <!-- Linha 4: Senha -->
+                        <div class="mb-4">
+                            <label for="senha" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                                <input type="password" class="form-control" id="senha" name="senha" 
+                                       {% if modo == 'Adicionar' %}required{% endif %} placeholder="********">
+                            </div>
+                            {% if modo == 'Editar' %}
+                                <div class="form-text text-muted"><i class="fa-solid fa-circle-info me-1"></i> Deixe em branco para manter a senha atual.</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="/usuarios" class="text-decoration-none text-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Cancelar</a>
+                            <button type="submit" class="btn btn-success btn-sm px-4">
+                                <i class="fa-solid fa-save me-2"></i> Salvar Usuário
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    {% endif %}
-
-    {# 3. Define a AÇÃO do formulário (Criar ou Atualizar) #}
-    {% if modo == 'Editar' %}
-        <form action="/usuarios/atualizar/{{ usuario.id }}" method="POST" style="max-width: 500px;">
-    {% else %}
-        <form action="/usuarios/criar" method="POST" style="max-width: 500px;">
-    {% endif %}
-
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        {# 
-           4. LÓGICA DE REPOPULAÇÃO (value="...")
-           A lógica é: Tente pegar o valor 'old' da sessão. 
-           Se não existir (??), tente pegar o valor do 'usuario' (para edição).
-           Se não existir (??), use uma string vazia.
-        #}
-        
-        <div style="margin-bottom: 15px;">
-            <label for="nome" style="display: block; margin-bottom: 5px;">Nome Completo</label>
-            <input type="text" id="nome" name="nome" value="{{ old['nome'] ?? usuario.nome ?? '' }}" required style="width: 100%; padding: 8px;">
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="usuario" style="display: block; margin-bottom: 5px;">Nome de Usuário (login)</label>
-            <input type="text" id="usuario" name="usuario" value="{{ old['usuario'] ?? usuario.usuario ?? '' }}" required style="width: 100%; padding: 8px;">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="email" style="display: block; margin-bottom: 5px;">Email</label>
-            <input type="email" id="email" name="email" value="{{ old['email'] ?? usuario.email ?? '' }}" required style="width: 100%; padding: 8px;">
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="senha" style="display: block; margin-bottom: 5px;">Senha</label>
-            <input type="password" id="senha" name="senha" 
-                   {% if modo == 'Adicionar' %}required{% endif %} 
-                   style="width: 100%; padding: 8px;">
-            {# 
-              - Campo senha NUNCA é repopulado por segurança.
-              - Se for modo 'Editar', o campo não é 'required' e mostramos a nota.
-            #}
-            {% if modo == 'Editar' %}
-                <small>Deixe em branco para não alterar a senha.</small>
-            {% endif %}
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="nivel" style="display: block; margin-bottom: 5px;">Nível de Acesso</label>
-            <select id="nivel" name="nivel" style="width: 100%; padding: 8px;">
-                {# Lógica para selecionar o valor antigo ou o do usuário #}
-                {% set nivel_selecionado = old['nivel'] ?? usuario.nivel ?? 'usuario' %}
-                
-                <option value="usuario" {% if nivel_selecionado == 'usuario' %}selected{% endif %}>Usuário</option>
-                <option value="admin" {% if nivel_selecionado == 'admin' %}selected{% endif %}>Administrador</option>
-            </select>
-        </div>
-        
-        <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer;">Salvar</button>
-    </form>
+    </div>
 {% endblock %}

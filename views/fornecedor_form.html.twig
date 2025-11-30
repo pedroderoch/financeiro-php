@@ -5,47 +5,78 @@
 {% block title %}{{ modo }} Fornecedor{% endblock %}
 
 {% block content %}
-    {# Buscamos os dados antigos do formulário e guardamos na variável 'old' #}
-    {% set old = session_get('old') %}
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 text-primary">
+                        <i class="fa-solid fa-truck-field me-2"></i>{{ modo }} Fornecedor
+                    </h4>
+                </div>
+                <div class="card-body p-4">
 
-    <h1>{{ modo }} Fornecedor</h1>
+                    {# Recupera dados antigos em caso de erro #}
+                    {% set old = session_get('old') %}
 
-    {# 2. MOSTRAR ERROS DE VALIDAÇÃO (Vindos da Sessão) #}
-    {% if session_has('errors') %}
-        <div style="color: red; background: #ffebee; border: 1px solid red; padding: 15px; margin-bottom: 20px;">
-            <strong>Oops! Encontramos alguns erros:</strong>
-            <ul>
-                {% for erro in session_get('errors') %}
-                    <li>{{ erro }}</li>
-                {% endfor %}
-            </ul>
+                    {# Exibição de Erros #}
+                    {% if session_has('errors') %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="fa-solid fa-triangle-exclamation me-2"></i> Corrija os erros abaixo:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for erro in session_get('errors') %}
+                                    <li>{{ erro }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    {# Define a ação do formulário #}
+                    {% if modo == 'Editar' %}
+                        <form action="/fornecedores/atualizar/{{ fornecedor.id }}" method="POST">
+                    {% else %}
+                        <form action="/fornecedores/criar" method="POST">
+                    {% endif %}
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- Linha 1: Nome -->
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome Fornecedor</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="{{ old['nome'] ?? fornecedor.nome ?? '' }}" required placeholder="Ex: Empresa XPTO Ltda">
+                            </div>
+                        </div>
+
+                        <!-- Linha 2: Descrição e Pix -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="descricao" class="form-label">Descrição / Categoria</label>
+                                <input type="text" class="form-control" id="descricao" name="descricao" 
+                                       value="{{ old['descricao'] ?? fornecedor.descricao ?? '' }}" placeholder="Ex: Serviços de Internet">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="chave_pix" class="form-label">Chave Pix</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-brands fa-pix"></i></span>
+                                    <input type="text" class="form-control" id="chave_pix" name="chave_pix" 
+                                           value="{{ old['chave_pix'] ?? fornecedor.chave_pix ?? '' }}" placeholder="email@exemplo.com">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="/fornecedores" class="text-decoration-none text-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Cancelar</a>
+                            <button type="submit" class="btn btn-success btn-sm px-4">
+                                <i class="fa-solid fa-save me-2"></i> Salvar Fornecedor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    {% endif %}
-
-    {# 3. Define a AÇÃO do formulário (Criar ou Atualizar) #}
-    {% if modo == 'Editar' %}
-        <form action="/fornecedores/atualizar/{{ fornecedor.id }}" method="POST" style="max-width: 500px;">
-    {% else %}
-        <form action="/fornecedores/criar" method="POST" style="max-width: 500px;">
-    {% endif %}
-
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-               
-        <div style="margin-bottom: 15px;">
-            <label for="nome" style="display: block; margin-bottom: 5px;">Nome Fornecedor</label>
-            <input type="text" id="nome" name="nome" value="{{ old['nome'] ?? fornecedor.nome ?? '' }}" required style="width: 100%; padding: 8px;">
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="descricao" style="display: block; margin-bottom: 5px;">Descrição</label>
-            <input type="text" id="descricao" name="descricao" value="{{ old['descricao'] ?? fornecedor.descricao ?? '' }}" style="width: 100%; padding: 8px;">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="chave_pix" style="display: block; margin-bottom: 5px;">Chave Pix</label>
-            <input type="text" id="chave_pix" name="chave_pix" value="{{ old['chave_pix'] ?? fornecedor.chave_pix ?? '' }}" style="width: 100%; padding: 8px;">
-        </div>
-        
-        <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer;">Salvar</button>
-    </form>
+    </div>
 {% endblock %}

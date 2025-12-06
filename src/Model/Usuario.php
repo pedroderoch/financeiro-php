@@ -17,20 +17,38 @@ class Usuario extends Model
     // ATUALIZADO para usar 'usuario' e 'senha'
     protected $fillable = [
         'nome',
-        'usuario', // <-- MUDOU DE 'username'
+        'usuario',
         'email',
-        'senha', // <-- MUDOU DE 'password'
+        'senha', 
         'foto',
-        'nivel' // (Se você adicionou a coluna 'nivel' também)
+        'nivel',
+        'situacao_id'
     ];
 
     /**
-     * ATUALIZADO: Mutator MÁGICO para a coluna 'senha'
-     * O nome do método muda de setPasswordAttribute para setSenhaAttribute
+     * Mutator para a senha (criptografia automática)
      */
     public function setSenhaAttribute(string $value): void
     {
-        // O atributo no array 'attributes' também muda para 'senha'
         $this->attributes['senha'] = password_hash($value, PASSWORD_DEFAULT);
+    }
+
+    // --- RELACIONAMENTOS ---
+
+    public function situacao()
+    {
+        return $this->belongsTo(Situacao::class, 'situacao_id');
+    }
+
+    // --- SCOPES (Filtros) ---
+
+    /**
+     * Filtra apenas os registos que NÃO estão excluídos.
+     * Inclui Ativos e Inativos.
+     * Uso: Usuario::naoExcluidos()->get();
+     */
+    public function scopeNaoExcluidos($query)
+    {
+        return $query->where('situacao_id', '!=', Situacao::EXCLUIDO);
     }
 }

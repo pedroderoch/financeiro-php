@@ -6,6 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lancamento extends Model
 {
+    const FORMAS_PAGAMENTO = [
+        'boleto' => 'Boleto Bancário',
+        'pix' => 'Pix',
+        'transferencia' => 'Transferência Bancária',
+        'cartao_credito' => 'Cartão de Crédito',
+        'cartao_debito' => 'Cartão de Débito',
+        'dinheiro' => 'Dinheiro',
+        'cheque' => 'Cheque',
+        'outros' => 'Outros'
+    ];
+
     protected $table = 'lancamentos';
 
     protected $fillable = [
@@ -21,10 +32,12 @@ class Lancamento extends Model
         'total_parcelas',
         'observacoes',
         'usuario_id',     // Chave estrangeira
-        'fornecedor_id'   // Chave estrangeira
+        'fornecedor_id',   // Chave estrangeira
+        'situacao_id'
     ];
 
-    // --- MUTATORS (A Correção Definitiva) ---
+
+    // --- MUTATORS  ---
 
     /**
      * Interceta a Data de Pagamento antes de salvar.
@@ -71,8 +84,26 @@ class Lancamento extends Model
     {
         return $this->belongsTo(Fornecedor::class, 'fornecedor_id');
     }
-    
-    // --- ACESSORS (Opcional, mas útil) ---
+
+    /**
+     * Um Lançamento "Pertence A" uma Situacao.
+     * Isso permite: $lancamento->situacao->id
+     */
+    public function situacao()
+    {
+        return $this->belongsTo(Situacao::class, 'situacao_id');
+    }
+
+     // --- SCOPES ---
+
+    /**
+     * Filtra apenas os registos que NÃO estão excluídos.
+     * Uso: Lancamento::naoExcluidos()->get();
+     */
+    public function scopeNaoExcluidos($query)
+    {
+        return $query->where('situacao_id', '!=', Situacao::EXCLUIDO);
+    }
     
     /**
      * Formata o valor para dinheiro (R$) automaticamente

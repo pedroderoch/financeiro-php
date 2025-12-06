@@ -69,12 +69,18 @@
                                 <label for="forma_pagamento" class="form-label">Forma de Pagamento</label>
                                 <select class="form-select" id="forma_pagamento" name="forma_pagamento">
                                     <option value="">Selecione...</option>
-                                    {% set forma = old['forma_pagamento']|default(lancamento.forma_pagamento|default('')) %}
-                                    <option value="boleto" {{ forma == 'boleto' ? 'selected' : '' }}>Boleto</option>
-                                    <option value="pix" {{ forma == 'pix' ? 'selected' : '' }}>Pix</option>
-                                    <option value="transferencia" {{ forma == 'transferencia' ? 'selected' : '' }}>Transferência</option>
-                                    <option value="cartao_credito" {{ forma == 'cartao_credito' ? 'selected' : '' }}>Cartão de Crédito</option>
-                                    <option value="dinheiro" {{ forma == 'dinheiro' ? 'selected' : '' }}>Dinheiro</option>
+                                    
+                                    {# Define o valor selecionado (do old ou do banco) #}
+                                    {% set forma_selecionada = old['forma_pagamento']|default(lancamento.forma_pagamento|default('')) %}
+                                    
+                                    {# Loop automático baseado na lista que vem do Controller #}
+                                    {% if formas_pagamento is defined %}
+                                        {% for valor, label in formas_pagamento %}
+                                            <option value="{{ valor }}" {{ forma_selecionada == valor ? 'selected' : '' }}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
                                 </select>
                             </div>
                         </div>

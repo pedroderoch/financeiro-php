@@ -4,6 +4,7 @@ namespace App\Controller;
 
 // 1. Importamos o nosso NOVO Model Eloquent
 use App\Model\Fornecedor;
+use App\Model\Situacao;
 use Twig\Environment; 
 use App\Request\FornecedorStoreRequest;
 use App\Request\FornecedorUpdateRequest;
@@ -18,7 +19,9 @@ class FornecedorController extends BaseController
 
     public function index(): void {
 
-        $fornecedores = Fornecedor::all();
+        // $fornecedores = Fornecedor::all();
+
+        $fornecedores = Fornecedor::naoExcluidos()->orderBy('id')->get();
 
         // dd($fornecedores->toArray());
     
@@ -106,7 +109,12 @@ class FornecedorController extends BaseController
         $fornecedor = Fornecedor::find($id);
 
         if ($fornecedor) {
-            $fornecedor->delete();
+            // $fornecedor->delete();
+            $fornecedor->situacao_id = Situacao::EXCLUIDO;
+            $fornecedor->save();
+            session_flash('success', 'Fornecedor removido com sucesso!');
+        } else {
+            session_flash('errors', ['Fornecedor não encontrado.']);
         }
 
         header('Location: /fornecedores');

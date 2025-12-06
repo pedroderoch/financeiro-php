@@ -19,23 +19,34 @@ class LancamentoController extends BaseController
 
     public function index(): void {
      
-        $lancamentos = Lancamento::all();
+        // Lista todos (sem filtro de excluídos por enquanto), ordenado por data
+        $lancamentos = Lancamento::with('fornecedor')
+            ->orderBy('data_vencimento', 'desc')
+            ->get();
 
-        $dados = [
-            'lancamentos' => $lancamentos
-        ];
-        
-        $this->render('lancamentos_lista.html.twig', $dados);
+        // --- CÁLCULOS DOS TOTAIS ---
+        // Usamos o Eloquent para somar a coluna 'valor' filtrando pelo tipo
+        $totalReceitas = Lancamento::where('tipo', 'receita')->sum('valor');
+        $totalDespesas = Lancamento::where('tipo', 'despesa')->sum('valor');
+        $saldoTotal = $totalReceitas - $totalDespesas;
+
+        $this->render('lancamentos_lista.html.twig', [
+            'lancamentos' => $lancamentos,
+            'total_receitas' => $totalReceitas,
+            'total_despesas' => $totalDespesas,
+            'saldo_total' => $saldoTotal
+        ]);
     }
 
     public function create(): void{
 
         // Busca todos os fornecedores para preencher o <select> no formulário
-        $fornecedores = Fornecedor::all();
+        $fornecedores = Fornecedor::orderBy('nome', 'asc')->get();
 
         $this->render('lancamento_form.html.twig', [
             'lancamento' => null,
-            'fornecedores' => $fornecedores
+            'fornecedores' => $fornecedores,
+            'formas_pagamento' => Lancamento::FORMAS_PAGAMENTO
         ]);
     }
 
@@ -71,12 +82,14 @@ class LancamentoController extends BaseController
     }
 
     public function edit(array $params): void {
+
         $id = $params['id'];
         $lancamento = Lancamento::find($id);
 
         // dd($fornecedor->toArray());
         
         if(!$lancamento){
+            session_flash('errors', ['Lançamento não encontrado.']);
             header('Location: /lancamentos');
             exit;
         }
@@ -86,7 +99,8 @@ class LancamentoController extends BaseController
 
         $this->render('lancamento_form.html.twig', [
             'lancamento' => $lancamento,
-            'fornecedores' => $fornecedores
+            'fornecedores' => $fornecedores,
+            'formas_pagamento' => Lancamento::FORMAS_PAGAMENTO
         ]);
 
 

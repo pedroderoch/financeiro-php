@@ -2,10 +2,14 @@
 
 namespace App\Request;
 
+use App\Model\Lancamento;
+
 class LancamentoUpdateRequest extends BaseRequest
 {
     public function rules(): array
     {
+        $formasValidas = implode(',', array_keys(Lancamento::FORMAS_PAGAMENTO));
+
         return [
             'descricao'       => 'required|string|max:255',
             'valor'           => 'required|numeric|min:0.01',
@@ -20,7 +24,7 @@ class LancamentoUpdateRequest extends BaseRequest
             
             // Campos de Pagamento (Opcionais)
             'valor_pago'      => 'nullable|numeric|min:0',
-            'forma_pagamento' => 'nullable|in:nao_informado,pix,boleto,transferencia',
+            'forma_pagamento' => 'nullable|in:' . $formasValidas,
             'data_pagamento'  => 'nullable|date',
             
             // Parcelamento e Obs
